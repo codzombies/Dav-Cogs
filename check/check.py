@@ -24,7 +24,7 @@ def chunks(l: List[_T], n: int):
 class Check(commands.Cog):
     """Check"""
 
-    __version__ = "2.1.0-dev1"
+    __version__ = "2.1.0-rc1"
 
     def format_help_for_context(self, ctx: commands.Context) -> str:
         # Thanks Sinbad! And Trusty in whose cogs I found this.
@@ -53,7 +53,6 @@ class Check(commands.Cog):
         await self._maybe_altmarker(ctx, member)
         await self._warnings_or_read(ctx, member)
         await self._maybe_listflag(ctx, member)
-        await ctx.send(_("Lookup completed."))
 
     async def _userinfo(self, ctx, member):
         try:
