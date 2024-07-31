@@ -1,10 +1,23 @@
 import logging
+from datetime import datetime, timezone
+from typing import List, Optional, TypeVar, Union
 
 import discord
 from redbot.core import checks, commands
 from redbot.core.i18n import Translator, cog_i18n
+from redbot.cogs.modlog import ModLog
+from redbot.core.bot import Red
+from redbot.core.modlog import Case, get_cases_for_member, get_casetype
+from redbot.core.utils import chat_formatting as cf
+from redbot.core.utils.menus import menu
 
 _ = Translator("Check", __file__)
+_T = TypeVar("_T")
+
+
+def chunks(l: List[_T], n: int):
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
 
 
 @cog_i18n(_)
@@ -27,7 +40,6 @@ class Check(commands.Cog):
         self.log = logging.getLogger("red.cog.dav-cogs.check")
 
     @commands.command()
-    @commands.guild_only()
     @checks.mod()
     @commands.max_concurrency(1, commands.BucketType.guild)
     async def check(self, ctx, member: discord.Member):
@@ -42,22 +54,25 @@ class Check(commands.Cog):
             await self._maybe_altmarker(ctx, member)
             await self._warnings_or_read(ctx, member)
             await self._maybe_listflag(ctx, member)
-    async def listcases(
-        self,
-        ctx: commands.Context,
-        per_embed: Optional[commands.Range[int, 1, 19]] = 6,
-        *,
-        member: Union[discord.Member, int],
-    ):
-        """List cases for the specified member."""
+        await ctx.send(_("Lookup completed."))
+
+    async def _userinfo(self, ctx, member):
+        try:
+            await ctx.invoke(ctx.bot.get_command("userinfo"), member=member)
+        except TypeError:
+            try:
+                await ctx.invoke(ctx.bot.get_command("userinfo"), user=member)
+            except:
+                pass
+        except Exception as e:
+            self.log.exception(f"Error in userinfo {e}", exc_info=True)
+
+    async def _warnings_or_read(self, ctx, member):
         async with ctx.typing():
             try:
-                if isinstance(member, int):
-                    cases = await get_cases_for_member(
-                        bot=ctx.bot, guild=ctx.guild, member_id=member
-                    )
-                else:
-                    cases = await get_cases_for_member(bot=ctx.bot, guild=ctx.guild, member=member)
+                cases = await get_cases_for_member(
+                    bot=ctx.bot, guild=ctx.guild, member=member
+                )
             except discord.NotFound:
                 return await ctx.send("That user does not exist.")
             except discord.HTTPException:
@@ -68,9 +83,9 @@ class Check(commands.Cog):
                 return await ctx.send("That user does not have any cases.")
 
             rendered_cases = []
-            for page, ccases in enumerate(chunks(cases, per_embed), 1):
+            for page, ccases in enumerate(chunks(cases, 6), 1):
                 embed = discord.Embed(
-                    title=f"Cases for `{getattr(member, 'display_name', member)}` (Page {page} / {len(cases) // per_embed + 1 if len(cases) % per_embed else len(cases) // per_embed})",
+                    title=f"Cases for `{member.display_name}` (Page {page} / {len(cases) // 6 + 1 if len(cases) % 6 else len(cases) // 6})",
                 )
                 for case in ccases:
                     if case.moderator is None:
@@ -97,7 +112,7 @@ class Check(commands.Cog):
 
                     created_at = datetime.fromtimestamp(case.created_at, tz=timezone.utc)
                     embed.add_field(
-                        name=f"Case #{case.case_number} | {(await get_casetype(case.action_type, getattr(member, 'guild', ctx.guild))).case_str}",
+                        name=f"Case #{case.case_number} | {(await get_casetype(case.action_type, ctx.guild)).case_str}",
                         value=f"{cf.bold('Moderator:')} {moderator}\n"
                         f"{cf.bold('Reason:')} {case.reason}\n"
                         f"{length}"
@@ -107,27 +122,6 @@ class Check(commands.Cog):
                 rendered_cases.append(embed)
 
         await menu(ctx, rendered_cases)
-        await ctx.send(_("Lookup completed."))
-
-    async def _userinfo(self, ctx, member):
-        try:
-            await ctx.invoke(ctx.bot.get_command("userinfo"), member=member)
-        except TypeError:
-            try:
-                await ctx.invoke(ctx.bot.get_command("userinfo"), user=member)
-            except:
-                pass
-        except Exception as e:
-            self.log.exception(f"Error in userinfo {e}", exc_info=True)
-
-    async def _warnings_or_read(self, ctx, member):
-        try:
-            await ctx.invoke(ctx.bot.get_command("read"), member=member.id)
-        except:
-            try:
-                await ctx.invoke(ctx.bot.get_command("warnings"), member=member.id)
-            except:
-                self.log.debug("Command warn not found.")
 
     async def _maybe_listflag(self, ctx, member):
         try:
