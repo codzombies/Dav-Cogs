@@ -44,16 +44,15 @@ class Check(commands.Cog):
     @commands.max_concurrency(1, commands.BucketType.guild)
     async def check(self, ctx, member: discord.Member):
         ctx.assume_yes = True
-        async with ctx.typing():
-            await ctx.send(
-                _(":mag_right: Starting lookup for: {usermention}({userid})").format(
-                    usermention=member.mention, userid=member.id
-                )
+        await ctx.send(
+            _(":mag_right: Starting lookup for: {usermention}({userid})").format(
+                usermention=member.mention, userid=member.id
             )
-            await self._userinfo(ctx, member)
-            await self._maybe_altmarker(ctx, member)
-            await self._warnings_or_read(ctx, member)
-            await self._maybe_listflag(ctx, member)
+        )
+        await self._userinfo(ctx, member)
+        await self._maybe_altmarker(ctx, member)
+        await self._warnings_or_read(ctx, member)
+        await self._maybe_listflag(ctx, member)
         await ctx.send(_("Lookup completed."))
 
     async def _userinfo(self, ctx, member):
