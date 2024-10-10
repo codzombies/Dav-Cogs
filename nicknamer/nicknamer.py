@@ -80,7 +80,7 @@ class NickNamer(commands.Cog):
         freeze_case = {
             "name": "nickfreeze",
             "default_setting": True,
-            "image": "\N{ICE}"
+            "image": "\N{ICE}",
             "case_str": "Nickname Frozen",
         }
         temp_case = {
