@@ -80,8 +80,8 @@ class NickNamer(commands.Cog):
         freeze_case = {
             "name": "nickfreeze",
             "default_setting": True,
-            "image": "\N{FREEZING FACE}",
-            "case_str": "Nickname frozen.",
+            "image": "\N{ICE}"
+            "case_str": "Nickname Frozen",
         }
         temp_case = {
             "name": "tempnick",
@@ -246,7 +246,6 @@ class NickNamer(commands.Cog):
                     user,
                     moderator=ctx.author,
                     reason=reason,
-                    channel=ctx.channel,
                 )
             if await self.config.guild(ctx.guild).dm():
                 try:
