@@ -80,7 +80,7 @@ class NickNamer(commands.Cog):
         freeze_case = {
             "name": "nickfreeze",
             "default_setting": True,
-            "image": "🧊",
+            "image": "\U0001F9CA"
             "case_str": "Nickname Frozen",
         }
         temp_case = {
@@ -104,7 +104,7 @@ class NickNamer(commands.Cog):
                 if after.id in e:
                     if after.nick != e[1]:
                         try:
-                            await after.edit(nick=e[1], reason="Nickname frozen.")
+                            await after.edit(nick=e[1], reason="Nickname Frozen")
                         except discord.errors.Forbidden:
                             log.info(
                                 f"Missing permissions to change {before.nick} ({before.id}) in {before.guild.id}, removing freeze"
@@ -221,7 +221,7 @@ class NickNamer(commands.Cog):
         user: discord.Member,
         nickname: str,
         *,
-        reason: Optional[str] = "Nickname frozen.",
+        reason: Optional[str] = "Nickname Frozen",
     ):
         """Freeze a users nickname."""
         name_check = await self.config.guild(ctx.guild).frozen()
